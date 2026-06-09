@@ -6,86 +6,81 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 export default function Teams() {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Check if Admin is logged in
-  const adminKey = sessionStorage.getItem('adminKey');
-
-  const fetchTeams = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/teams`);
-      setTeams(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching teams");
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/teams`);
+        setTeams(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching teams", error);
+        setLoading(false);
+      }
+    };
     fetchTeams();
   }, []);
 
-  const handleRename = async (oldName) => {
-    const newName = prompt(`Enter new name for ${oldName}:`);
-    
-    // Cancel if they hit escape, typed nothing, or typed the exact same name
-    if (!newName || newName.trim() === '' || newName === oldName) return;
+  if (loading) return <div className="p-8 text-center text-gray-400 mt-10">Loading roster...</div>;
 
-    try {
-      await axios.post(`${API_URL}/teams/rename`, {
-        authKey: adminKey,
-        oldName: oldName,
-        newName: newName.trim()
-      });
-      
-      alert(`Successfully renamed to ${newName}!`);
-      fetchTeams(); // Reload the list to show the change instantly
-    } catch (err) {
-      alert("Failed to rename team. Check your admin connection.");
-    }
-  };
-
-  if (loading) return <div className="p-8 text-center text-gray-400 mt-10">Loading Roster...</div>;
+  // A list of cool neon colors to give each team a unique dot indicator
+  const dotColors = [
+    'bg-emerald-400', 'bg-blue-400', 'bg-purple-400', 
+    'bg-orange-400', 'bg-pink-400', 'bg-yellow-400', 
+    'bg-cyan-400', 'bg-red-400'
+  ];
 
   return (
-    <div className="p-4 pb-24">
-      <div className="flex items-center gap-2 mb-6 px-2">
-        <h2 className="text-2xl font-black tracking-wider text-white uppercase">The Roster</h2>
-        <div className="h-1 flex-1 bg-gray-800 rounded-full"></div>
+    <div className="p-4 pb-24 max-w-md mx-auto">
+      
+      {/* Sleek Header */}
+      <div className="flex items-center gap-3 mb-6 mt-2">
+        <h2 className="text-xl font-black tracking-widest uppercase text-white drop-shadow-md">
+          The Roster
+        </h2>
+        <div className="h-[1px] flex-1 bg-gradient-to-r from-gray-700 to-transparent"></div>
       </div>
 
+      {/* Teams List */}
       <div className="space-y-4">
-        {teams.map((team) => (
-          <div 
-            key={team._id || team.name} 
-            className={`bg-gradient-to-r ${team.accent} rounded-xl p-5 border ${team.border} shadow-lg flex flex-col justify-center relative overflow-hidden`}
-          >
-            {/* Faint Background Letter */}
-            <div className="absolute -right-4 -top-4 opacity-5 text-8xl font-black">
-              {team.name[0]}
-            </div>
+        {teams.map((team, index) => {
+          // Assign a repeating color dot to each card
+          const accentColor = dotColors[index % dotColors.length];
 
-            <div className="flex justify-between items-start z-10">
-              <div>
-                <h3 className="text-xl font-bold text-white mb-1">{team.name}</h3>
-                <p className="text-gray-400 text-sm font-medium tracking-wide flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
-                  {team.players}
-                </p>
-              </div>
+          return (
+            <div 
+              key={team._id || team.name} 
+              // CRITICAL FIX: overflow-hidden keeps the giant letter inside the box!
+              className="relative bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 overflow-hidden shadow-lg transition-transform active:scale-95"
+            >
               
-              {/* Feature: Admin Edit Button */}
-              {adminKey && (
-                <button 
-                  onClick={() => handleRename(team.name)}
-                  className="bg-gray-800/80 hover:bg-gray-700 text-xs font-bold px-3 py-1.5 rounded-md border border-gray-600 transition shadow-sm"
-                >
-                  Edit Name
-                </button>
-              )}
+              {/* THE WATERMARK LETTER (Fixed and Locked in place) */}
+              <div className="absolute -right-4 -bottom-6 text-[140px] font-black text-white/[0.03] select-none pointer-events-none leading-none z-0">
+                {team.name.charAt(0).toUpperCase()}
+              </div>
+
+              {/* CARD CONTENT */}
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black text-white tracking-wide mb-2">
+                  {team.name}
+                </h3>
+                
+                <div className="flex items-center gap-2 text-sm text-gray-400 font-medium">
+                  {/* Glowing neon dot */}
+                  <span className={`w-2 h-2 rounded-full ${accentColor} shadow-[0_0_8px_currentColor]`}></span>
+                  
+                  {/* Player Names */}
+                  <span>
+                    {Array.isArray(team.players) 
+                      ? team.players.join(' & ') 
+                      : team.players}
+                  </span>
+                </div>
+              </div>
+
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
