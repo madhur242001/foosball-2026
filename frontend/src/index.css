@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark: #000000;     /* Deep slate background */
+  --color-card: #1e293b;     /* Slate card background */
+  --color-primary: #10B981;  /* Neon turf-green accent */
+  --color-accent: #F97316;   /* Vivid orange accent */
+}
+
+body {
+  background-color: #000000; /* Changed to pure pitch black */
+  color: #ffffff;
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Your existing premium grid texture */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.20) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.20) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
